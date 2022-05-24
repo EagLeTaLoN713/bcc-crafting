@@ -1,4 +1,4 @@
-# BCC - Scene
+# BCC - Crafting
 
 > A RedM scene text free placement system for [Vorp Core](http://docs.vorpcore.com:3000/)
 

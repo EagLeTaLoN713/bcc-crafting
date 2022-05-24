@@ -71,7 +71,7 @@ Citizen.CreateThread(function()
                                     TriggerEvent("vorpinputs:getInput", "Confirm", "Amount", function(cb)
                                         local count = tonumber(cb)
                                         if count ~= nil and count ~= 'close' and count ~= '' and count ~= 0 then
-                                            TriggerServerEvent('syn:craftingalg', craftingx[i], count)
+                                            TriggerServerEvent('bcc:craftingalg', craftingx[i], count)
                                         else
                                             TriggerEvent("vorp:TipBottom", "Invalid Amount", 4000)
                                         end
@@ -89,7 +89,7 @@ Citizen.CreateThread(function()
                                         TriggerEvent("vorpinputs:getInput", "Confirm", "Amount", function(cb)
                                             local count = tonumber(cb)
                                             if count ~= nil and count ~= 'close' and count ~= '' and count ~= 0 then
-                                                TriggerServerEvent('syn:craftingalg', craftingx[i], count)
+                                                TriggerServerEvent('bcc:craftingalg', craftingx[i], count)
                                             else
                                                 TriggerEvent("vorp:TipBottom", "Invalid Amount", 4000)
                                             end
@@ -112,7 +112,7 @@ Citizen.CreateThread(function()
                                     TriggerEvent("vorpinputs:getInput", "Confirm", "Amount", function(cb)
                                         local count = tonumber(cb)
                                         if count ~= nil and count ~= 'close' and count ~= '' and count ~= 0 then
-                                            TriggerServerEvent('syn:craftingalg', craftingx[i], count)
+                                            TriggerServerEvent('bcc:craftingalg', craftingx[i], count)
                                         else
                                             TriggerEvent("vorp:TipBottom", "Invalid Amount", 4000)
                                         end
@@ -131,7 +131,7 @@ Citizen.CreateThread(function()
                                         TriggerEvent("vorpinputs:getInput", "Confirm", "Amount", function(cb)
                                             local count = tonumber(cb)
                                             if count ~= nil and count ~= 'close' and count ~= '' and count ~= 0 then
-                                                TriggerServerEvent('syn:craftingalg', craftingx[i], count)
+                                                TriggerServerEvent('bcc:craftingalg', craftingx[i], count)
                                             else
                                                 TriggerEvent("vorp:TipBottom", "Invalid Amount", 4000)
                                             end
@@ -174,7 +174,7 @@ Citizen.CreateThread(function()
             if campfire ~= false and iscrafting == false then
                 DrawTxt("Press [~e~G~q~] to Craft", 0.50, 0.95, 0.7, 0.5, true, 255, 255, 255, 255, true)
                 if whenKeyJustPressed(keys["G"]) then
-                    TriggerServerEvent('syn:findjob')
+                    TriggerServerEvent('bcc:findjob')
                     Wait(500)
                     if keyopen == false then
                         propinfo = v
@@ -190,7 +190,7 @@ Citizen.CreateThread(function()
             if 2.5 > dist then
                 DrawTxt("Press [~e~G~q~] to Craft", 0.50, 0.95, 0.7, 0.5, true, 255, 255, 255, 255, true)
                 if whenKeyJustPressed(keys["G"]) then
-                    TriggerServerEvent('syn:findjob')
+                    TriggerServerEvent('bcc:findjob')
                     Wait(500)
                     if keyopen == false then
                         loctitle = k
@@ -203,13 +203,13 @@ Citizen.CreateThread(function()
     end
 end)
 
-RegisterNetEvent("syn_crafting:sendjob")
-AddEventHandler("syn_crafting:sendjob", function(job)
+RegisterNetEvent("bcc_crafting:sendjob")
+AddEventHandler("bcc_crafting:sendjob", function(job)
     playerjob = job
 end)
 
-RegisterNetEvent("syn:crafting")
-AddEventHandler("syn:crafting", function()
+RegisterNetEvent("bcc:crafting")
+AddEventHandler("bcc:crafting", function()
     local playerPed = PlayerPedId()
     iscrafting = true
     TaskStartScenarioInPlace(playerPed, GetHashKey('WORLD_HUMAN_CROUCH_INSPECT'), 15000, true, false, false, false)

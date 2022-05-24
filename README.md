@@ -1,6 +1,6 @@
 # BCC - Crafting
 
-> A RedM scene text free placement system for [Vorp Core](http://docs.vorpcore.com:3000/)
+> A RedM crafting system for [Vorp Core](http://docs.vorpcore.com:3000/)
 
 Join the [VORP Community Discord](https://discord.gg/23MPbQ6)
 

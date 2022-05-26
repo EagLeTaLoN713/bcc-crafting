@@ -23,7 +23,7 @@ All configurations available in `/config.lua`
 - This is a modification to [syn_crafting](https://github.com/kamelzarandah/syn_crafting) (Made by Blue & Dungeon for Syn County RP)
 
 ## TODO
-- Migrate to menuAPI vs warmenu
+[Trello](https://trello.com/b/WXwcNv2T/bcc-crafting)
 
  ## Dependency
  - Vorp Core

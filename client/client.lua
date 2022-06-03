@@ -1,8 +1,11 @@
+-- TODO: Better animations/scenarioa
+
 local iscrafting = false
-local playerjob
 local propinfo
 local loctitle
 local type = 0
+local campfire = 0
+local initialized = false
 
 
 keys = Config.keys
@@ -28,130 +31,6 @@ function contains(table, element)
     return false
 end
 
-function OpenCraftMenu()
-    WarMenu.OpenMenu('craftmenu')
-end
-
-Citizen.CreateThread(function()
-    WarMenu.CreateMenu('Craft', "Craft")
-    WarMenu.SetSubTitle('Craft', 'Crafting Menu')
-
-    local _source = source
-    while true do
-
-        local ped = GetPlayerPed(-1)
-        local coords = GetEntityCoords(PlayerPedId())
-
-        if WarMenu.IsMenuOpened('Craft') then
-            if WarMenu.MenuButton('Start Items Craft', "Craft") then
-                OpenCraftMenu()
-                type = 0
-            end
-            if WarMenu.MenuButton('Start Items Cook', "Craft") then
-                OpenCraftMenu()
-                type = 1
-            end
-            WarMenu.Display()
-        end
-        Citizen.Wait(0)
-    end
-end)
-
-Citizen.CreateThread(function()
-    WarMenu.CreateMenu('craftmenu', 'craft menu')
-    repeat
-        if WarMenu.IsMenuOpened('craftmenu') then
-            if type == 0 then
-                for i = 1, #craftingx do
-                    if loctitle ~= 0 then
-
-                        if contains(craftingx[i]['Location'], loctitle) and craftingx[i]['Type'] == 0 then
-                            if contains(craftingx[i]['Job'], playerjob) or craftingx[i]['Job'] == 0 then
-                                if WarMenu.Button(craftingx[i]['SubText'], craftingx[i]['Text'], craftingx[i]['Desc']) then
-                                    TriggerEvent("vorpinputs:getInput", "Confirm", "Amount", function(cb)
-                                        local count = tonumber(cb)
-                                        if count ~= nil and count ~= 'close' and count ~= '' and count ~= 0 then
-                                            TriggerServerEvent('bcc:craftingalg', craftingx[i], count)
-                                        else
-                                            TriggerEvent("vorp:TipBottom", "Invalid Amount", 4000)
-                                        end
-                                    end)
-                                    WarMenu.CloseMenu()
-                                end
-                            end
-                        end
-                    else
-                        if craftingx[i]['Location'] == 0 and craftingx[i]['Type'] == 0 then
-                            if contains(craftingx[i]['Prop'], propinfo) or craftingx[i]['Prop'] == 0 then
-                                if contains(craftingx[i]['Job'], playerjob) or craftingx[i]['Job'] == 0 then
-                                    if WarMenu.Button(craftingx[i]['Text'], craftingx[i]['SubText'],
-                                        craftingx[i]['Desc']) then
-                                        TriggerEvent("vorpinputs:getInput", "Confirm", "Amount", function(cb)
-                                            local count = tonumber(cb)
-                                            if count ~= nil and count ~= 'close' and count ~= '' and count ~= 0 then
-                                                TriggerServerEvent('bcc:craftingalg', craftingx[i], count)
-                                            else
-                                                TriggerEvent("vorp:TipBottom", "Invalid Amount", 4000)
-                                            end
-                                        end)
-                                        WarMenu.CloseMenu()
-                                    end
-                                end
-                            end
-                        end
-                    end
-                end
-
-            elseif type == 1 then
-                for i = 1, #craftingx do
-                    if loctitle ~= 0 then
-
-                        if contains(craftingx[i]['Location'], loctitle) and craftingx[i]['Type'] == 1 then
-                            if contains(craftingx[i]['Job'], playerjob) or craftingx[i]['Job'] == 0 then
-                                if WarMenu.Button(craftingx[i]['Text'], craftingx[i]['SubText'], craftingx[i]['Desc']) then
-                                    TriggerEvent("vorpinputs:getInput", "Confirm", "Amount", function(cb)
-                                        local count = tonumber(cb)
-                                        if count ~= nil and count ~= 'close' and count ~= '' and count ~= 0 then
-                                            TriggerServerEvent('bcc:craftingalg', craftingx[i], count)
-                                        else
-                                            TriggerEvent("vorp:TipBottom", "Invalid Amount", 4000)
-                                        end
-                                    end)
-                                    WarMenu.CloseMenu()
-                                end
-                            end
-                        end
-                    else
-                        if craftingx[i]['Location'] == 0 and craftingx[i]['Type'] == 1 then
-                            if contains(craftingx[i]['Prop'], propinfo) or craftingx[i]['Prop'] == 0 then
-                                if contains(craftingx[i]['Job'], playerjob) or craftingx[i]['Job'] ==
-                                    0 then
-                                    if WarMenu.Button(craftingx[i]['Text'], craftingx[i]['SubText'],
-                                        craftingx[i]['Desc']) then
-                                        TriggerEvent("vorpinputs:getInput", "Confirm", "Amount", function(cb)
-                                            local count = tonumber(cb)
-                                            if count ~= nil and count ~= 'close' and count ~= '' and count ~= 0 then
-                                                TriggerServerEvent('bcc:craftingalg', craftingx[i], count)
-                                            else
-                                                TriggerEvent("vorp:TipBottom", "Invalid Amount", 4000)
-                                            end
-                                        end)
-                                        WarMenu.CloseMenu()
-                                    end
-                                end
-                            end
-                        end
-                    end
-
-                end
-
-            end
-            WarMenu.Display()
-        end
-        Citizen.Wait(0)
-    until false
-end)
-
 function DrawTxt(str, x, y, w, h, enableShadow, col1, col2, col3, a, centre)
     local str = CreateVarString(10, "LITERAL_STRING", str)
     SetTextScale(w, h)
@@ -167,6 +46,8 @@ end
 Citizen.CreateThread(function()
     while true do
         Citizen.Wait(1)
+
+        -- Check for craftable object starters
         local player = PlayerPedId()
         local Coords = GetEntityCoords(player)
         for k, v in pairs(Config.craftingProps) do
@@ -179,12 +60,20 @@ Citizen.CreateThread(function()
                     if keyopen == false then
                         propinfo = v
                         loctitle = 0
-                        WarMenu.OpenMenu('Craft')
+                        SendNUIMessage({
+                            type = 'bcc-craft-open',
+                            craftables = Config.crafting,
+                            categories = Config.categories,
+                            crafttime = Config.CraftTime
+                        })
+                        SetNuiFocus(true, true)
                     else
                     end
                 end
             end
         end
+
+        -- Check for craftable location starters
         for k, v in pairs(Config.locations) do
             local dist = GetDistanceBetweenCoords(v.x, v.y, v.z, Coords.x, Coords.y, Coords.z, 0)
             if 2.5 > dist then
@@ -194,7 +83,13 @@ Citizen.CreateThread(function()
                     Wait(500)
                     if keyopen == false then
                         loctitle = k
-                        WarMenu.OpenMenu('Craft')
+                        SendNUIMessage({
+                            type = 'bcc-craft-open',
+                            craftables = Config.crafting,
+                            categories = Config.categories,
+                            crafttime = Config.CraftTime
+                        })
+                        SetNuiFocus(true, true)
                     else
                     end
                 end
@@ -203,31 +98,160 @@ Citizen.CreateThread(function()
     end
 end)
 
-RegisterNetEvent("bcc_crafting:sendjob")
-AddEventHandler("bcc_crafting:sendjob", function(job)
-    playerjob = job
+RegisterNUICallback('bcc-craft-close', function(args, cb)
+    SetNuiFocus(false, false)
+    cb('ok')
 end)
 
-RegisterNetEvent("bcc:crafting")
+RegisterNUICallback('bcc-craftevent', function(args, cb)
+
+    local count = tonumber(args.quantity)
+    if count ~= nil and count ~= 'close' and count ~= '' and count ~= 0 then
+        TriggerServerEvent('bcc:craftingalg', args.craftable, count)
+    else
+        TriggerEvent("vorp:TipBottom", "Invalid Amount", 4000)
+    end
+
+    cb('ok')
+end)
+
+--[[RegisterNetEvent("bcc:crafting")
 AddEventHandler("bcc:crafting", function()
     local playerPed = PlayerPedId()
     iscrafting = true
-    TaskStartScenarioInPlace(playerPed, GetHashKey('WORLD_HUMAN_CROUCH_INSPECT'), 15000, true, false, false, false)
-    exports['progressBars']:startUI(15000, "Crafting...")
-    Citizen.Wait(15000)
+    
+    TaskStartScenarioInPlace(playerPed, GetHashKey('WORLD_HUMAN_CROUCH_INSPECT'), Config.CraftTime, true, false, false, false)
+    exports['progressBars']:startUI(Config.CraftTime, "Crafting...")
+    
+    Citizen.Wait(Config.CraftTime)
+    TriggerEvent("vorp:TipRight", "You finished crafting", 4000)
     keyopen = false
     iscrafting = false
+end)]]
+
+-----------------------------
+
+local Anims = {
+
+    
+    ["craft"] = {
+        dict = "mech_inventory@crafting@fallbacks",
+        name = "full_craft_and_stow", 
+        flag = 24
+},
+   
+  
+}
+
+function PlayAnimation(ped, anim)
+	if not DoesAnimDictExist(anim.dict) then
+		return
+	end
+
+	RequestAnimDict(anim.dict)
+
+	while not HasAnimDictLoaded(anim.dict) do
+		Wait(0)
+	end
+
+	TaskPlayAnim(ped, anim.dict, anim.name, 1.0, 1.0, -1, anim.flag, 0, false, false, false, '', false)
+
+	RemoveAnimDict(anim.dict)
+end
+
+RegisterNetEvent('bcc:crafting')
+AddEventHandler('bcc:crafting', function()
+    local ped = PlayerPedId()
+    iscrafting = true
+    ---enabled below to add prop
+    --local coords = GetEntityCoords(ped)
+    --local prop = CreateObject("p_bowl04x_stew", coords.x, coords.y, coords.z + 0.2, true, true, false, false, true)
+    --local boneIndex = GetEntityBoneIndexByName(ped, "SKEL_R_Finger12")
+    Citizen.InvokeNative(0xFCCC886EDE3C63EC, ped, 2, 1)
+    Citizen.Wait(0)
+    
+    PlayAnimation(ped, Anims["craft"])
+    AttachEntityToEntity(prop, PlayerPedId(), boneIndex, 0.02, 0.01, 0.05, 15.0, 175.0, 0.0, true, true, false, true, 1, true)
+    exports['progressBars']:startUI(Config.CraftTime, "Crafting...")
+    
+    Citizen.Wait(Config.CraftTime)
+    TriggerEvent("vorp:TipRight", "You finished crafting", 4000)
+    keyopen = false
+    iscrafting = false
+    Wait(1000)
+    
+    DeleteEntity(prop)
+    ClearPedSecondaryTask(ped)
+    
+end)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-------------------------
+
+
+
+
+function placeCampfire()
+    if campfire ~= 0 then
+        SetEntityAsMissionEntity(campfire)
+        DeleteObject(campfire)
+        campfire = 0
+    end
+
+    local playerPed = PlayerPedId()
+    TaskStartScenarioInPlace(playerPed, GetHashKey('WORLD_HUMAN_CROUCH_INSPECT'), 30000, true, false, false, false)
+    exports['progressBars']:startUI(30000, "You're placing a campfire...")
+    Citizen.Wait(30000)
+    
+    ClearPedTasksImmediately(PlayerPedId())
+    local x,y,z = table.unpack(GetOffsetFromEntityInWorldCoords(PlayerPedId(), 0.0, 2.0, -1.55))
+    
+    local prop = CreateObject(GetHashKey(Config.PlaceableCampfire), x, y, z, true, false, true)
+    SetEntityHeading(prop, GetEntityHeading(PlayerPedId()))
+    PlaceObjectOnGroundProperly(prop)
+    campfire = prop
+end
+
+RegisterNetEvent('bcc:campfire')
+AddEventHandler('bcc:campfire', function()
+    placeCampfire()
 end)
 
 if Config.commands.campfire == true then
     RegisterCommand("campfire", function(source, args, rawCommand)
-        local player = PlayerPedId()
-        local v = GetEntityCoords(player)
-    
-        local model = 'P_CAMPFIRECOMBINED01X'
-    
-        local r = RequestModel(model)
-        local storage = CreateObject(r, v.x + 5.0, v.y + 0.0, v.z + 0.0, true, false, true);
-        PlaceObjectOnGroundProperly(storage)
-    end, false) 
+        placeCampfire()
+    end, false)
+
+    RegisterCommand('dcampfire', function(source, args, rawCommand)
+        if campfire ~= 0 then
+            SetEntityAsMissionEntity(campfire)
+            TaskStartScenarioInPlace(PlayerPedId(), GetHashKey('WORLD_HUMAN_BUCKET_POUR_LOW'), 7000, true, false, false, false)
+            TriggerEvent("vorp:TipRight", "Putting out the campfire...", 7000)
+            Wait(7000)
+            ClearPedTasksImmediately(PlayerPedId())
+            DeleteObject(campfire)
+            campfire = 0            
+        end
+    end, false)
 end
+
